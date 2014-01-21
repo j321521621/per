@@ -13,6 +13,11 @@
 #include <atlstr.h>
 #include <locale.h>
 
+#include <vector>
+using std::vector;
+#include <string>
+using std::string;
+using std::wstring;
 
 
 // TODO: reference additional headers your program requires here

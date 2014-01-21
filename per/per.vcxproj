@@ -77,9 +77,14 @@
   <ItemGroup>
     <ClInclude Include="COFFheader.h" />
     <ClInclude Include="constdef.h" />
+    <ClInclude Include="ExportTable.h" />
+    <ClInclude Include="ImportTable.h" />
     <ClInclude Include="MDOSStub.h" />
     <ClInclude Include="OptionHeader.h" />
-    <ClInclude Include="PEFile.h" />
+    <ClInclude Include="PE.h" />
+    <ClInclude Include="RAVRender.h" />
+    <ClInclude Include="Relocation.h" />
+    <ClInclude Include="Resource.h" />
     <ClInclude Include="SectionHeader.h" />
     <ClInclude Include="Signature.h" />
     <ClInclude Include="stdafx.h" />

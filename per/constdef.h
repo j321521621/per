@@ -25,6 +25,7 @@ void assert(BOOL ok,CString info=L"",BOOL winerr=TRUE)
 			info.Format(L"%s %s(%d)",info,buff,err);
 		}
 		wprintf(L"%s\n",info);
+		::MessageBox(NULL,info,L"assert",MB_OK);
 		exit(err);
 	}
 }

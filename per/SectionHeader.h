@@ -44,7 +44,7 @@ public:
 	SectionHeader():m_Name()
 	{}
 
-	BOOL Init(PCHAR base,long size,PETYPE petype)
+	BOOL Init(PCHAR base,DWORD size,PETYPE petype)
 	{
 		m_petype=petype;
 

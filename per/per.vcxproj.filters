@@ -13,8 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\PEStruct">
+    <Filter Include="Source Files\PE">
       <UniqueIdentifier>{03ebc9b3-c613-49dd-8a01-37e1265b4ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PE\PEStruct">
+      <UniqueIdentifier>{a670e661-90dc-49e0-8db7-06df62091174}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PE\PEStruct\DataDirectory">
+      <UniqueIdentifier>{a1fe7d28-daa1-42ce-921a-f2bdd541e312}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,26 +33,41 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PEFile.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="constdef.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ExportTable.h">
+      <Filter>Source Files\PE\PEStruct\DataDirectory</Filter>
+    </ClInclude>
+    <ClInclude Include="ImportTable.h">
+      <Filter>Source Files\PE\PEStruct\DataDirectory</Filter>
+    </ClInclude>
     <ClInclude Include="COFFheader.h">
-      <Filter>Source Files\PEStruct</Filter>
-    </ClInclude>
-    <ClInclude Include="MDOSStub.h">
-      <Filter>Source Files\PEStruct</Filter>
-    </ClInclude>
-    <ClInclude Include="OptionHeader.h">
-      <Filter>Source Files\PEStruct</Filter>
+      <Filter>Source Files\PE\PEStruct</Filter>
     </ClInclude>
     <ClInclude Include="Signature.h">
-      <Filter>Source Files\PEStruct</Filter>
+      <Filter>Source Files\PE\PEStruct</Filter>
+    </ClInclude>
+    <ClInclude Include="MDOSStub.h">
+      <Filter>Source Files\PE\PEStruct</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionHeader.h">
+      <Filter>Source Files\PE\PEStruct</Filter>
     </ClInclude>
     <ClInclude Include="SectionHeader.h">
-      <Filter>Source Files\PEStruct</Filter>
+      <Filter>Source Files\PE\PEStruct</Filter>
+    </ClInclude>
+    <ClInclude Include="RAVRender.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PE.h">
+      <Filter>Source Files\PE</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Source Files\PE\PEStruct\DataDirectory</Filter>
+    </ClInclude>
+    <ClInclude Include="Relocation.h">
+      <Filter>Source Files\PE\PEStruct\DataDirectory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

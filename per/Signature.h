@@ -8,7 +8,7 @@ public:
 	{
 
 	}
-	BOOL Init(PCHAR base,long size)
+	BOOL Init(PCHAR base,DWORD size)
 	{
 		assert(size>=4,L"文件长度不够(>=4)无法初始化Signature",FALSE);
 		m_sig[0]=base[0];

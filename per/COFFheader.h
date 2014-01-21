@@ -59,7 +59,7 @@ public:
 	  {
 
 	  }
-	  BOOL Init(PCHAR base,long size,PETYPE petype)
+	  BOOL Init(PCHAR base,DWORD size,PETYPE petype)
 	  {
 		  m_petype=petype;
 		  assert(size>=20,L"文件长度不够(>=20)无法初始化COFFHeader",FALSE);

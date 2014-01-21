@@ -34,7 +34,7 @@ CString GetSubsystemDesc(WORD code)
 class OptionalHeader
 {
 public:
-	BOOL Init(PCHAR base,long size,PETYPE petype)
+	BOOL Init(PCHAR base,DWORD size,PETYPE petype)
 	{
 		m_petype=petype;
 		m_Magic=*(PWORD(base));
