@@ -34,8 +34,9 @@ CString GetSubsystemDesc(WORD code)
 class OptionalHeader
 {
 public:
-	BOOL Init(PCHAR base,DWORD size,PETYPE petype)
+	DWORD Init(PCHAR base,DWORD size,PETYPE petype)
 	{
+        assert(petype==PETYPE_EXCUTE || petype==PETYPE_OBJECT);
 		m_petype=petype;
 		m_Magic=*(PWORD(base));
 		if(m_Magic==PE32)
@@ -56,8 +57,8 @@ public:
 		{
 			assert(FALSE,L"Magic非法,可选头初始化失败",FALSE);
 		}
-		assert(!m_petype==PETYPE_IMAGE || m_NumberOfRvaAndSizes==16,L"数据表数异常,无法初始化可选头",FALSE);
-		if(m_petype==PETYPE_IMAGE)
+		assert(!m_petype==PETYPE_EXCUTE || m_NumberOfRvaAndSizes==16,L"数据表数异常,无法初始化可选头",FALSE);
+		if(m_petype==PETYPE_EXCUTE)
 		{
 			if(m_Magic==PE32)
 			{
@@ -70,39 +71,46 @@ public:
 				memcpy_s(&m_Export,128,base+112,128);
 			}
 		}
-		return TRUE;
+        if(m_Magic==PE32)
+        {
+            return 224;
+        }
+        else if(m_Magic==PE32A)
+        {
+            return 240;
+        }
 	}
 
 	void Print()
 	{
 		wprintf(L"---------------可选头--------------\n");
-		wprintf(L"类型: %s\n",(m_Magic==PE32)?L"PE32":L"PE32+");
+		wprintf(L"类型      : %s\n",(m_Magic==PE32)?L"PE32":L"PE32+");
 		wprintf(L"连接器版本: %d.%d\n",m_MajorLinkerVersion,m_MinorLinkerVersion);
-		wprintf(L"代码段大小: 0x%08x\n",m_SizeOfCode);
-		wprintf(L"初始化数据大小: 0x%08x\n",m_SizeOfInitializedData);
-		wprintf(L"未初始数据大小: 0x%08x\n",m_SizeOfUninitializedData);
-		wprintf(L"进入点: 0x%08x\n",m_AddressOfEntryPoint);
-		wprintf(L"代码段基址: 0x%08x\n",m_BaseOfCode);
+		wprintf(L"代码段大小: [%8x]\n",m_SizeOfCode);
+		wprintf(L"初始化大小: [%8x]\n",m_SizeOfInitializedData);
+		wprintf(L"未初始大小: [%8x]\n",m_SizeOfUninitializedData);
+		wprintf(L"进入点    : [%8x]\n",m_AddressOfEntryPoint);
+		wprintf(L"代码段基址: [%8x]\n",m_BaseOfCode);
 
 		if(m_Magic==PE32)
 		{
-			wprintf(L"数据段基址: 0x08%x\n",m_BaseOfData_PE32);
-			wprintf(L"映像偏好基址(32): 0x%08x\n",m_ImageBase_PE32);
+			wprintf(L"数据段基址: [%8x]\n",m_BaseOfData_PE32);
+			wprintf(L"32偏好基址: [%8x]\n",m_ImageBase_PE32);
 		}
 		else if(m_Magic==PE32A)
 		{
-			wprintf(L"映像偏好基址(64): 0x%16llx\n",m_ImageBase_PE32A);
+			wprintf(L"64偏好基址: [%16llx]\n",m_ImageBase_PE32A);
 		}
-		wprintf(L"节对齐: 0x%08x\n",m_SectionAlignment);
-		wprintf(L"文件对齐: 0x%08x\n",m_FileAlignment);
-		wprintf(L"操作系统版本: %d.%d\n",m_MajorOperatingSystemVersion,m_MinorOperatingSystemVersion);
-		wprintf(L"映像版本: %d.%d\n",m_MajorImageVersion,m_MinorImageVersion);
+		wprintf(L"节对齐    : [%8x]\n",m_SectionAlignment);
+		wprintf(L"文件对齐  : [%8x]\n",m_FileAlignment);
+		wprintf(L"OS版本    : %d.%d\n",m_MajorOperatingSystemVersion,m_MinorOperatingSystemVersion);
+		wprintf(L"映像版本  : %d.%d\n",m_MajorImageVersion,m_MinorImageVersion);
 		wprintf(L"子系统版本: %d.%d\n",m_MajorSubsystemVersion,m_MinorSubsystemVersion);
-		wprintf(L"映像大小: %d\n",m_SizeOfImage);
-		wprintf(L"头大小: %d\n",m_SizeOfHeaders);
-		wprintf(L"校验和: 0x%08x\n",m_CheckSum);
-		wprintf(L"子系统: %s (%d)\n",GetSubsystemDesc(m_Subsystem),m_Subsystem);//to do
-		wprintf(L"DLL标志位: 0x%08x\n",m_DllCharacteristics);
+		wprintf(L"映像大小  : [%8x]\n",m_SizeOfImage);
+		wprintf(L"头大小    : [%8x]\n",m_SizeOfHeaders);
+		wprintf(L"校验和    : [%8x]\n",m_CheckSum);
+		wprintf(L"子系统    : %s (%d)\n",GetSubsystemDesc(m_Subsystem),m_Subsystem);//to do
+		wprintf(L"DLL标志位 : [%8x]\n",m_DllCharacteristics);
 		wprintfc(((m_DllCharacteristics&IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE)?HWIHTE:DWIHTE),L"    可重定位\n",);
 		wprintfc(((m_DllCharacteristics&IMAGE_DLL_CHARACTERISTICS_FORCE_INTEGRITY)?HWIHTE:DWIHTE),L"    强制签名检查\n",);
 		wprintfc(((m_DllCharacteristics&IMAGE_DLL_CHARACTERISTICS_NX_COMPAT)?HWIHTE:DWIHTE),L"    NX兼容\n",);
@@ -112,10 +120,10 @@ public:
 		wprintfc(((m_DllCharacteristics&IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE)?HWIHTE:DWIHTE),L"    终端服务感知\n",);
 		if(m_Magic==PE32)
 		{
-			wprintf(L"栈保留大小(32): 0x%08x\n",m_SizeOfStackReserve_PE32);
-			wprintf(L"栈提交大小(32): 0x%08x\n",m_SizeOfStackCommit_PE32);
-			wprintf(L"堆保留大小(32): 0x%08x\n",m_SizeOfHeapReserve_PE32);
-			wprintf(L"堆提交大小(32): 0x%08x\n",m_SizeOfHeapCommit_PE32);
+			wprintf(L"栈保留大小(32): [%8x]\n",m_SizeOfStackReserve_PE32);
+			wprintf(L"栈提交大小(32): [%8x]\n",m_SizeOfStackCommit_PE32);
+			wprintf(L"堆保留大小(32): [%8x]\n",m_SizeOfHeapReserve_PE32);
+			wprintf(L"堆提交大小(32): [%8x]\n",m_SizeOfHeapCommit_PE32);
 
 		}
 		else if(m_Magic==PE32A)
@@ -127,22 +135,22 @@ public:
 			wprintf(L"堆提交大小(64): 0x%16llx\n",m_SizeOfHeapCommit_PE32A);
 		}
 		wprintf(L"数据表数: %d\n",m_NumberOfRvaAndSizes);
-		if(m_petype==PETYPE_IMAGE)
+		if(m_petype==PETYPE_EXCUTE)
 		{
-			wprintfc(((m_Export.Size>0)?HWIHTE:DWIHTE),L"    00. RVA: 0x%08x, Size 0x%08x %s\n",m_Export.VirtualAddress,m_Export.Size,L"导出符号");
-			wprintfc(((m_Import.Size>0)?HWIHTE:DWIHTE),L"    01. RVA: 0x%08x, Size 0x%08x %s\n",m_Import.VirtualAddress,m_Import.Size,L"导入符号");
-			wprintfc(((m_Resource.Size>0)?HWIHTE:DWIHTE),L"    02. RVA: 0x%08x, Size 0x%08x %s\n",m_Resource.VirtualAddress,m_Resource.Size,L"资源");
-			wprintfc(((m_Exception.Size>0)?HWIHTE:DWIHTE),L"    03. RVA: 0x%08x, Size 0x%08x %s\n",m_Exception.VirtualAddress,m_Exception.Size,L"异常");
-			wprintfc(((m_Certificate.Size>0)?HWIHTE:DWIHTE),L"    04. RVA: 0x%08x, Size 0x%08x %s\n",m_Certificate.VirtualAddress,m_Certificate.Size,L"证书");
-			wprintfc(((m_BaseRelocation.Size>0)?HWIHTE:DWIHTE),L"    05. RVA: 0x%08x, Size 0x%08x %s\n",m_BaseRelocation.VirtualAddress,m_BaseRelocation.Size,L"重定位表");
-			wprintfc(((m_Debug.Size>0)?HWIHTE:DWIHTE),L"    06. RVA: 0x%08x, Size 0x%08x %s\n",m_Debug.VirtualAddress,m_Debug.Size,L"调试信息");
-			wprintfc(((m_GlobalPtr.VirtualAddress>0)?HWIHTE:DWIHTE),L"    08. RVA: 0x%08x, Size 0x%08x %s\n",m_GlobalPtr.VirtualAddress,m_GlobalPtr.Size,L"指针寄存器");
-			wprintfc(((m_TLS.Size>0)?HWIHTE:DWIHTE),L"    09. RVA: 0x%08x, Size 0x%08x %s\n",m_TLS.VirtualAddress,m_TLS.Size,L"线程局部存储");
-			wprintfc(((m_LoadConfig.Size>0)?HWIHTE:DWIHTE),L"    10. RVA: 0x%08x, Size 0x%08x %s\n",m_LoadConfig.VirtualAddress,m_LoadConfig.Size,L"加载信息");
-			wprintfc(((m_BoundImport.Size>0)?HWIHTE:DWIHTE),L"    11. RVA: 0x%08x, Size 0x%08x %s\n",m_BoundImport.VirtualAddress,m_BoundImport.Size,L"边界导入符号");
-			wprintfc(((m_IAT.Size>0)?HWIHTE:DWIHTE),L"    12. RVA: 0x%08x, Size 0x%08x %s\n",m_IAT.VirtualAddress,m_IAT.Size,L"导入地址符号");
-			wprintfc(((m_DelayImport.Size>0)?HWIHTE:DWIHTE),L"    13. RVA: 0x%08x, Size 0x%08x %s\n",m_DelayImport.VirtualAddress,m_DelayImport.Size,L"延迟加载");
-			wprintfc(((m_CLRRuntime.Size>0)?HWIHTE:DWIHTE),L"    14. RVA: 0x%08x, Size 0x%08x %s\n",m_CLRRuntime.VirtualAddress,m_CLRRuntime.Size,L"CLR运行时");
+			wprintfc(((m_Export.Size>0)?HWIHTE:DWIHTE),L"    00. RVA: [%8x], Size [%8x] %s\n",m_Export.VirtualAddress,m_Export.Size,L"导出符号");
+			wprintfc(((m_Import.Size>0)?HWIHTE:DWIHTE),L"    01. RVA: [%8x], Size [%8x] %s\n",m_Import.VirtualAddress,m_Import.Size,L"导入符号");
+			wprintfc(((m_Resource.Size>0)?HWIHTE:DWIHTE),L"    02. RVA: [%8x], Size [%8x] %s\n",m_Resource.VirtualAddress,m_Resource.Size,L"资源");
+			wprintfc(((m_Exception.Size>0)?HWIHTE:DWIHTE),L"    03. RVA: [%8x], Size [%8x] %s\n",m_Exception.VirtualAddress,m_Exception.Size,L"异常");
+			wprintfc(((m_Certificate.Size>0)?HWIHTE:DWIHTE),L"    04. RVA: [%8x], Size [%8x] %s\n",m_Certificate.VirtualAddress,m_Certificate.Size,L"证书");
+			wprintfc(((m_BaseRelocation.Size>0)?HWIHTE:DWIHTE),L"    05. RVA: [%8x], Size [%8x] %s\n",m_BaseRelocation.VirtualAddress,m_BaseRelocation.Size,L"重定位表");
+			wprintfc(((m_Debug.Size>0)?HWIHTE:DWIHTE),L"    06. RVA: [%8x], Size [%8x] %s\n",m_Debug.VirtualAddress,m_Debug.Size,L"调试信息");
+			wprintfc(((m_GlobalPtr.VirtualAddress>0)?HWIHTE:DWIHTE),L"    08. RVA: [%8x], Size [%8x] %s\n",m_GlobalPtr.VirtualAddress,m_GlobalPtr.Size,L"指针寄存器");
+			wprintfc(((m_TLS.Size>0)?HWIHTE:DWIHTE),L"    09. RVA: [%8x], Size [%8x] %s\n",m_TLS.VirtualAddress,m_TLS.Size,L"线程局部存储");
+			wprintfc(((m_LoadConfig.Size>0)?HWIHTE:DWIHTE),L"    10. RVA: [%8x], Size [%8x] %s\n",m_LoadConfig.VirtualAddress,m_LoadConfig.Size,L"加载信息");
+			wprintfc(((m_BoundImport.Size>0)?HWIHTE:DWIHTE),L"    11. RVA: [%8x], Size [%8x] %s\n",m_BoundImport.VirtualAddress,m_BoundImport.Size,L"边界导入符号");
+			wprintfc(((m_IAT.Size>0)?HWIHTE:DWIHTE),L"    12. RVA: [%8x], Size [%8x] %s\n",m_IAT.VirtualAddress,m_IAT.Size,L"导入地址符号");
+			wprintfc(((m_DelayImport.Size>0)?HWIHTE:DWIHTE),L"    13. RVA: [%8x], Size [%8x] %s\n",m_DelayImport.VirtualAddress,m_DelayImport.Size,L"延迟加载");
+			wprintfc(((m_CLRRuntime.Size>0)?HWIHTE:DWIHTE),L"    14. RVA: [%8x], Size [%8x] %s\n",m_CLRRuntime.VirtualAddress,m_CLRRuntime.Size,L"CLR运行时");
 		}
 	}
 

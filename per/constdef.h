@@ -7,12 +7,11 @@
 
 enum PETYPE
 {
-	PETYPE_UNKNOWN,
-	PETYPE_IMAGE,
+	PETYPE_EXCUTE,
 	PETYPE_OBJECT
 };
 
-void assert(BOOL ok,CString info=L"",BOOL winerr=TRUE)
+void assert(BOOL ok,CString info=L"assert错误",BOOL winerr=FALSE)
 {
 	if(!ok)
 	{
@@ -36,4 +35,10 @@ void assert(BOOL ok,CString info=L"",BOOL winerr=TRUE)
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),color);\
 	wprintf(format,__VA_ARGS__);\
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),HWIHTE);\
+}
+
+void subsize(DWORD &size,DWORD off)
+{
+	assert(size>=off,L"文件长度不够");
+	size-=off;
 }

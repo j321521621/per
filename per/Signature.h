@@ -8,7 +8,7 @@ public:
 	{
 
 	}
-	BOOL Init(PCHAR base,DWORD size)
+	DWORD Init(PCHAR base,DWORD size)
 	{
 		assert(size>=4,L"文件长度不够(>=4)无法初始化Signature",FALSE);
 		m_sig[0]=base[0];
@@ -16,7 +16,7 @@ public:
 		m_sig[2]=base[2];
 		m_sig[3]=base[3];
 		assert(m_sig[0]=='P' && m_sig[1]=='E'&& m_sig[2]==0 && m_sig[3]==0,L"非法的image文件,Signature校验失败",FALSE);
-		return TRUE;
+		return 4;
 	}
 
 	void Print()

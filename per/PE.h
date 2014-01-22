@@ -15,7 +15,7 @@ class File:
 	public RAVRender
 {
 public:
-	File():m_size(0),m_base(0),m_petype(PETYPE_UNKNOWN),m_path(L"")
+	File():m_size(0),m_base(0),m_path(L"")
 	{
 
 	}
@@ -23,18 +23,7 @@ public:
 	BOOL Init(CString path)
 	{
 		m_path=path;
-		if(path.Right(4)==L".exe" || path.Right(4)==L".dll")
-		{
-			m_petype=PETYPE_IMAGE;
-		}
-		else if(path.Right(4)==L".obj")
-		{
-			m_petype=PETYPE_OBJECT;
-		}
-		else
-		{
-			assert(FALSE,L"未识别的文件扩展名",FALSE);
-		}
+
 		HANDLE hfile=CreateFile(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 		assert(hfile!=INVALID_HANDLE_VALUE);
 		m_size=GetFileSize(hfile,NULL);
@@ -56,7 +45,6 @@ protected:
 	CString m_path;
 	DWORD m_size;
 	PCHAR m_base;
-	PETYPE m_petype;
 
 private:
 
@@ -69,92 +57,69 @@ public:
 		File::Init(path);
 		PCHAR base=m_base;
 		DWORD size=m_size;
-		if (m_petype==PETYPE_IMAGE)
+		DWORD off;
+		off=m_dosstub.Init(base,size);
+		base+=off;
+		subsize(size,off);
+
+		off=m_signature.Init(base,size);
+		base+=off;
+		subsize(size,off);
+
+		off=m_coffheader.Init(base,size);
+		base+=off;
+		subsize(size,off);
+        m_petype=m_coffheader.GetPetype();
+
+        off=m_optionalheader.Init(base,m_coffheader.m_SizeOfOptionalHeader,m_petype);
+        base+=off;
+        subsize(size,off);
+
+		for(int i=0;i<m_coffheader.m_NumberOfSections;i++)
 		{
-			m_dosstub.Init(base,size);
-			base+=m_dosstub.m_peheader_off;
-			size-=m_dosstub.m_peheader_off;
-
-			m_signature.Init(base,size);
-			base+=4;
-			size-=4;
-
-			m_coffheader.Init(base,size,m_petype);
-			base+=20;
-			size-=20;
-
-			m_optionalheader.Init(base,size,m_petype);
-			base+=m_coffheader.m_SizeOfOptionalHeader;
-			size-=m_coffheader.m_SizeOfOptionalHeader;
-
-			for(int i=0;i<m_coffheader.m_NumberOfSections;i++)
-			{
-				SectionHeader sh;
-				sh.Init(base,size,m_petype);
-				m_sectiontheader.push_back(sh);
-				base+=40;
-				size-=40;
-			}
-
-			if(m_optionalheader.m_Export.VirtualAddress)
-			{
-				m_exporttable.Init(RavToImage(m_optionalheader.m_Export.VirtualAddress,m_optionalheader.m_Export.Size),m_optionalheader.m_Export.Size,this);
-			}
-			else
-			{
-				m_exporttable.Init();
-			}
-
-			if(m_optionalheader.m_Import.VirtualAddress)
-			{
-				m_importtable.Init(RavToImage(m_optionalheader.m_Import.VirtualAddress,m_optionalheader.m_Import.Size),m_optionalheader.m_Import.Size,this);
-			}
-			else
-			{
-				m_importtable.Init();
-			}
-
-			if(m_optionalheader.m_Resource.VirtualAddress)
-			{
-				m_resourse.Init(RavToImage(m_optionalheader.m_Resource.VirtualAddress,m_optionalheader.m_Resource.Size),m_optionalheader.m_Resource.Size,this);
-			}
-			else
-			{
-				m_resourse.Init();
-			}
-
-			if(m_optionalheader.m_Resource.VirtualAddress)
-			{
-				m_relocation.Init(RavToImage(m_optionalheader.m_BaseRelocation.VirtualAddress,m_optionalheader.m_BaseRelocation.Size),m_optionalheader.m_BaseRelocation.Size,this);
-			}
-			else
-			{
-				m_relocation.Init();
-			}
-
-
-			
+			SectionHeader sh;
+			sh.Init(base,size,m_petype);
+			m_sectiontheader.push_back(sh);
+			base+=40;
+			size-=40;
 		}
-		else if(m_petype==PETYPE_OBJECT)
+
+		if(m_optionalheader.m_Export.VirtualAddress)
 		{
-
-			m_coffheader.Init(base,size,m_petype);
-			base+=20;
-			size-=20;
-
-			for(int i=0;i<m_coffheader.m_NumberOfSections;i++)
-			{
-				SectionHeader sh;
-				sh.Init(base,size,m_petype);
-				m_sectiontheader.push_back(sh);
-				base+=40;
-				size-=40;
-			}
+			m_exporttable.Init(RavToImage(m_optionalheader.m_Export.VirtualAddress,m_optionalheader.m_Export.Size),m_optionalheader.m_Export.Size,this);
 		}
 		else
 		{
-			assert(FALSE,L"未识别的PE文件类型",FALSE);
+			m_exporttable.Init();
 		}
+
+		if(m_optionalheader.m_Import.VirtualAddress)
+		{
+			m_importtable.Init(RavToImage(m_optionalheader.m_Import.VirtualAddress,m_optionalheader.m_Import.Size),m_optionalheader.m_Import.Size,this);
+		}
+		else
+		{
+			m_importtable.Init();
+		}
+
+		if(m_optionalheader.m_Resource.VirtualAddress)
+		{
+			m_resourse.Init(RavToImage(m_optionalheader.m_Resource.VirtualAddress,m_optionalheader.m_Resource.Size),m_optionalheader.m_Resource.Size,this);
+		}
+		else
+		{
+			m_resourse.Init();
+		}
+
+		if(m_optionalheader.m_Resource.VirtualAddress)
+		{
+			m_relocation.Init(RavToImage(m_optionalheader.m_BaseRelocation.VirtualAddress,m_optionalheader.m_BaseRelocation.Size),m_optionalheader.m_BaseRelocation.Size,this);
+		}
+		else
+		{
+			m_relocation.Init();
+		}
+
 		return TRUE;
 	}
 
@@ -166,7 +131,7 @@ public:
 		wprintf(L"路径:%s\n",m_path);
 		wprintf(L"大小:0x%x \n",m_size);
 
-		if (m_petype==PETYPE_IMAGE)
+		if (m_petype==PETYPE_EXCUTE)
 		{
 			wprintf(L"类型:IMAGE\n");
 			m_dosstub.Print();
@@ -231,6 +196,7 @@ public:
 
 
 private:
+    PETYPE m_petype;
 	MSDOSStub m_dosstub;
 	Signature m_signature;
 	COFFHeader m_coffheader;
